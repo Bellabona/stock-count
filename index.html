@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="BB Stock">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥗</text></svg>">
+<title>BellaBona Stock Count</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--g:#2D6A4F;--l:#95D5B2;--d:#1B4332;--lt:#D8F3DC;--r:#E63946;--o:#E76F51;--bl:#264653;--gr:#6B7280;--lg:#F3F4F6;--y:#FDE68A;--w:#FFF}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f4f0;color:#1a1a1a}
+
+.header{background:var(--g);color:white;padding:16px 20px;position:sticky;top:0;z-index:100}
+.header-row{display:flex;align-items:center;justify-content:space-between}
+.header h1{font-size:18px;font-weight:700;letter-spacing:-0.3px}
+.header .date{font-size:13px;opacity:0.9;margin-top:2px}
+
+.tabs{display:flex;background:var(--d);padding:4px}
+.tab{flex:1;padding:14px 8px;text-align:center;color:rgba(255,255,255,0.5);font-size:14px;font-weight:600;cursor:pointer;border-radius:8px;transition:all .2s}
+.tab.active{color:white;background:rgba(255,255,255,0.12)}
+
+.driver-section{background:white;padding:16px 20px;border-bottom:2px solid var(--l);display:flex;gap:12px;align-items:center}
+.driver-section label{font-size:13px;color:var(--gr);font-weight:600;white-space:nowrap}
+.driver-input{flex:1;border:2px solid #e5e7eb;border-radius:12px;padding:12px 16px;font-size:16px;font-weight:600;outline:none;background:var(--lg)}
+.driver-input:focus{border-color:var(--g);background:white;box-shadow:0 0 0 3px rgba(45,106,79,0.15)}
+
+.client-form{display:none;padding-bottom:140px}
+.client-form.active{display:block}
+
+.col-hdr{display:grid;grid-template-columns:1fr 55px 70px 60px;padding:8px 20px;background:var(--g);color:white;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;gap:8px;position:sticky;top:112px;z-index:50}
+.col-hdr span:not(:first-child){text-align:center}
+
+.cat-hdr{background:var(--lt);padding:12px 20px;font-size:14px;font-weight:700;color:var(--d);border-bottom:2px solid var(--l);position:sticky;top:143px;z-index:49}
+
+.item-card{padding:14px 20px;border-bottom:1px solid #eee;background:white}
+.item-card:nth-child(even){background:#fafcfa}
+.item-row{display:grid;grid-template-columns:1fr 55px 70px 60px;align-items:center;gap:8px}
+.item-name{font-size:15px;font-weight:600;line-height:1.3}
+.item-unit{font-size:12px;color:var(--gr);margin-top:1px}
+.item-par{font-size:16px;font-weight:700;color:var(--g);text-align:center}
+.item-input{width:100%;border:2.5px solid var(--y);border-radius:10px;padding:10px 4px;font-size:20px;font-weight:800;text-align:center;background:#fffef0;outline:none;color:var(--bl);-webkit-appearance:none}
+.item-input:focus{border-color:var(--g);background:white;box-shadow:0 0 0 3px rgba(45,106,79,0.2)}
+.item-input::placeholder{color:#ccc;font-weight:400;font-size:14px}
+.item-order{font-size:17px;font-weight:800;text-align:center;border-radius:8px;padding:6px 4px;min-height:36px;display:flex;align-items:center;justify-content:center}
+.item-order.needs{background:var(--lt);color:var(--d)}
+.item-order.zero{color:#bbb;font-weight:500;font-size:13px}
+.item-order.empty{color:#ddd;font-size:12px}
+
+.item-note-toggle{font-size:12px;color:var(--o);cursor:pointer;margin-top:6px;display:inline-flex;align-items:center;gap:4px}
+.item-note-area{display:none;margin-top:8px}
+.item-note-area.show{display:block}
+.item-note-input{width:100%;border:1.5px solid #e5e7eb;border-radius:8px;padding:10px 12px;font-size:14px;outline:none;background:var(--lg);resize:none;min-height:44px;font-family:inherit}
+.item-note-input:focus{border-color:var(--o);background:white}
+.item-note-input::placeholder{color:#aaa}
+
+.status-badge{font-size:11px;font-weight:800;text-align:center;border-radius:6px;padding:4px 6px;display:inline-block}
+.status-low{background:#FEE2E2;color:var(--r)}
+.status-ok{background:var(--lt);color:var(--g)}
+
+.general-notes{background:#FFF8E1;border:2px solid var(--y);border-radius:14px;margin:12px 16px;padding:14px}
+.general-notes label{font-size:12px;color:var(--gr);font-weight:700;display:block;margin-bottom:6px}
+.general-notes textarea{width:100%;border:none;background:transparent;font-size:15px;resize:none;outline:none;min-height:50px;font-family:inherit;line-height:1.5}
+
+.summary-bar{position:fixed;bottom:0;left:0;right:0;background:white;border-top:3px solid var(--l);padding:12px 16px 16px;z-index:200;box-shadow:0 -6px 30px rgba(0,0,0,0.1)}
+.summary-stats{display:flex;justify-content:space-around;margin-bottom:10px}
+.stat{text-align:center}
+.stat .num{font-size:22px;font-weight:800;color:var(--g)}
+.stat .num.alert{color:var(--r)}
+.stat .lbl{font-size:10px;color:var(--gr);text-transform:uppercase;font-weight:600;letter-spacing:0.5px}
+.btn-row{display:flex;gap:8px}
+.btn{flex:1;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:700;cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary{background:var(--g);color:white}
+.btn-primary:active{transform:scale(0.97);background:var(--d)}
+.btn-whatsapp{background:#25D366;color:white}
+.btn-whatsapp:active{transform:scale(0.97);background:#1da851}
+
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:300;align-items:flex-end;justify-content:center}
+.modal-bg.show{display:flex}
+.modal{background:white;border-radius:20px 20px 0 0;padding:24px;width:100%;max-width:500px;max-height:85vh;overflow-y:auto;animation:slideUp .3s ease-out}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal h2{font-size:18px;color:var(--g);margin-bottom:4px}
+.modal .modal-sub{font-size:13px;color:var(--gr);margin-bottom:14px}
+.modal pre{background:var(--lg);padding:14px;border-radius:12px;font-size:12px;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow-y:auto;margin-bottom:16px;font-family:'SF Mono',Menlo,monospace;line-height:1.5}
+.modal-btns{display:flex;gap:8px}
+.modal-btns button{flex:1;padding:14px;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;border:none}
+.modal-btns .copy-btn{background:var(--g);color:white}
+.modal-btns .wa-btn{background:#25D366;color:white}
+.modal-btns .close-btn{background:var(--lg);color:var(--gr)}
+</style>
+</head>
+<body>
+
+<div class="header">
+<div class="header-row">
+<div>
+<h1>BellaBona Stock Count</h1>
+<div class="date" id="today"></div>
+</div>
+</div>
+</div>
+
+<div class="tabs" id="tabs">
+<div class="tab active" onclick="switchTab('revolut',this)">Revolut</div>
+<div class="tab" onclick="switchTab('paypal',this)">PayPal</div>
+<div class="tab" onclick="switchTab('ufa',this)">UFA-Cafe</div>
+</div>
+
+<div class="driver-section">
+<label>Driver:</label>
+<input class="driver-input" type="text" id="driverName" placeholder="Enter your name">
+</div>
+
+<div id="forms"></div>
+
+<div class="summary-bar">
+<div class="summary-stats">
+<div class="stat"><div class="num" id="s-count">0</div><div class="lbl">Counted</div></div>
+<div class="stat"><div class="num" id="s-order">0</div><div class="lbl">To Order</div></div>
+<div class="stat"><div class="num alert" id="s-low">0</div><div class="lbl">Low</div></div>
+<div class="stat"><div class="num" id="s-total">0</div><div class="lbl">Total</div></div>
+</div>
+<div class="btn-row">
+<button class="btn btn-primary" onclick="submitCount()">Order Summary</button>
+<button class="btn btn-whatsapp" onclick="shareWhatsApp()">WhatsApp</button>
+</div>
+</div>
+
+<div class="modal-bg" id="modal">
+<div class="modal">
+<h2 id="mtitle">Order Summary</h2>
+<div class="modal-sub" id="msub"></div>
+<pre id="mcontent"></pre>
+<div class="modal-btns">
+<button class="copy-btn" onclick="copyText()">Copy</button>
+<button class="wa-btn" onclick="shareWA()">WhatsApp</button>
+<button class="close-btn" onclick="closeModal()">Close</button>
+</div>
+</div>
+</div>
+
+<script>
+const D={
+revolut:{name:'Revolut',cats:[
+{n:'Drinks',items:[
+{n:'True Fruits 250ml',u:'bottle',p:14},{n:'ChariTea Black',u:'bottle',p:8},{n:'ChariTea Mate',u:'bottle',p:6},
+{n:'ChariTea Red',u:'bottle',p:4},{n:'Kombucha Raspberry',u:'bottle',p:6},{n:'Kombucha Hibiskus',u:'bottle',p:6},
+{n:'Coca Cola/Zero',u:'bottle',p:6},{n:'Fanta Orange',u:'bottle',p:6},{n:'Rauch Juice',u:'bottle',p:6},
+{n:'Kombucha Early Bird',u:'bottle',p:4}]},
+{n:'Snacks & Bars',items:[
+{n:'Be-Kind Dark Choco',u:'box(12)',p:1},{n:'Be-Kind Peanut Butter',u:'box(12)',p:1},{n:'Mars/Snickers Protein',u:'box',p:1},
+{n:'Corny Bars',u:'pk(6)',p:4},{n:'Snickers',u:'piece',p:8},{n:'KitKat',u:'piece',p:5},
+{n:'M&M',u:'piece',p:6},{n:'Mikado',u:'pkt',p:4},{n:'Hanuta',u:'pk(10)',p:2},
+{n:'Pick Up Choco',u:'piece',p:6},{n:'Haribo Vegan',u:'pack',p:1},{n:'Pringles',u:'can',p:6}]},
+{n:'Fruits',items:[
+{n:'Fruit Mix Basket',u:'basket',p:1},{n:'Bananas',u:'kg',p:3},{n:'Apples',u:'kg',p:2},
+{n:'Grapes',u:'pkt',p:2},{n:'Pears',u:'kg',p:2},{n:'Ginger',u:'pkt',p:2},{n:'Kiwi',u:'kg',p:1}]},
+{n:'Breakfast & Nuts',items:[
+{n:'Granola Original',u:'pkt',p:2},{n:'Granola Coco Cherry',u:'pkt',p:1},{n:'Mixed Nuts',u:'kg',p:1},
+{n:'Studentenfutter',u:'pkt',p:6},{n:'Bretzle Box',u:'box',p:1}]}
+]},
+paypal:{name:'PayPal',cats:[
+{n:'Fruits & Produce',items:[
+{n:'Bananas',u:'kg',p:5},{n:'Apples',u:'kg',p:3},{n:'Grapes',u:'pkt',p:4},{n:'Oranges',u:'kg',p:3},
+{n:'Kiwi',u:'kg',p:2},{n:'Pears',u:'kg',p:2},{n:'Lemons',u:'bag',p:1},{n:'Ginger',u:'pkt',p:2},
+{n:'Cherry Tomatoes',u:'kg',p:1},{n:'Fresh Bread',u:'loaf',p:3}]},
+{n:'Dairy & Milk',items:[
+{n:'Oat Milk Barista',u:'L',p:12},{n:'Milch Barista 3.5%',u:'L',p:12},{n:'Lactose-Free Milk',u:'L',p:6},
+{n:'Soy Milk',u:'L',p:6},{n:'Butter',u:'pack',p:2},{n:'Almond Milk',u:'L',p:6}]},
+{n:'Drinks',items:[
+{n:'Charitea Bio Mate',u:'bottle',p:20},{n:'True Fruits 250ml',u:'bottle',p:14},{n:'Fritz Cola',u:'bottle',p:12},
+{n:'RIOBA Orange Juice',u:'bottle',p:10},{n:'Fuze Tea Peach',u:'bottle',p:10},{n:'Rauch Juice',u:'bottle',p:8}]},
+{n:'Snacks',items:[
+{n:'Mars/Fulfil Protein',u:'piece',p:8},{n:'Corny Bars',u:'pk(6)',p:4},{n:'M&M',u:'piece',p:8},
+{n:'Twix',u:'piece',p:6},{n:'Snickers',u:'piece',p:8},{n:'Lions',u:'piece',p:6},
+{n:'KitKat',u:'piece',p:6},{n:'Oreo',u:'piece',p:6},{n:'Pringles',u:'can',p:6},
+{n:'Bounty/Kinder',u:'piece',p:6},{n:'Haribo',u:'pack',p:2},{n:'Bretzle Box',u:'box',p:1}]},
+{n:'Nuts & Breakfast',items:[
+{n:'Mixed Nuts',u:'kg',p:1},{n:'Studentenfutter',u:'pkt',p:8},{n:'Erdnuss',u:'pkt',p:6},{n:'Granola',u:'pkt',p:3}]},
+{n:'Cafe Supplies',items:[
+{n:'Matcha Powder',u:'pkt',p:1},{n:'Coffee Beans',u:'kg',p:3},{n:'White Sugar',u:'kg',p:2},{n:'Napkins',u:'pack',p:2}]}
+]},
+ufa:{name:'UFA-Cafe',cats:[
+{n:'Morning Pastries',items:[
+{n:'Butter Croissant',u:'pcs',p:5},{n:'Pistachio Croissant',u:'pcs',p:4},{n:'Vegan Croissant',u:'pcs',p:3},
+{n:'Pain au Chocolat',u:'pcs',p:4},{n:'Chocolate Muffin',u:'pcs',p:4},{n:'Blueberry Muffin',u:'pcs',p:4},
+{n:'Belgian Choc Cookie',u:'pcs',p:6},{n:'Triple Choc Cookie',u:'pcs',p:6}]},
+{n:'Fruit Basket',items:[
+{n:'Bananas',u:'kg',p:5},{n:'Apples',u:'kg',p:3},{n:'Pears',u:'kg',p:2},{n:'Grapes',u:'pkt',p:4},
+{n:'Oranges',u:'kg',p:3},{n:'Lemons',u:'bag',p:1},{n:'Ginger',u:'pkt',p:2},{n:'Kiwi',u:'kg',p:2}]},
+{n:'Vegetables',items:[
+{n:'Cherry Tomatoes',u:'kg',p:1},{n:'Sliced Cucumber',u:'kg',p:0.5},{n:'Sliced Peppers',u:'kg',p:1}]},
+{n:'Dairy & Milk',items:[
+{n:'Oatly Barista',u:'L',p:12},{n:'Milch Barista 3.5%',u:'L',p:24},{n:'Lactose-Free Milk',u:'L',p:12},
+{n:'Soy Milch Barista',u:'L',p:6},{n:'Almond Milk',u:'L',p:6},{n:'Regular Milk',u:'L',p:6}]},
+{n:'Cafe Supplies',items:[
+{n:'White Sugar',u:'kg',p:5},{n:'Brown Sugar',u:'kg',p:2},{n:'Matcha Powder',u:'250g',p:2},
+{n:'Decaff Coffee',u:'250g',p:2},{n:'Coffee Beans',u:'kg',p:7},{n:'Napkins',u:'pack',p:2}]}
+]}};
+
+let cur='revolut';
+
+function init(){
+document.getElementById('today').textContent=new Date().toLocaleDateString('de-DE',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+const c=document.getElementById('forms');
+for(const[k,cl]of Object.entries(D)){
+let h=`<div class="client-form${k==='revolut'?' active':''}" id="f-${k}">`;
+h+=`<div class="general-notes"><label>General Notes / Issues / Feedback:</label><textarea placeholder="e.g. shelf dirty, 3x expired yogurt, client asked for new item..." id="gn-${k}"></textarea></div>`;
+h+=`<div class="col-hdr"><span>Item</span><span>Par</span><span>Stock</span><span>Order</span></div>`;
+let i=0;
+for(const cat of cl.cats){
+h+=`<div class="cat-hdr">${cat.n} (${cat.items.length})</div>`;
+for(const it of cat.items){
+h+=`<div class="item-card"><div class="item-row">
+<div><div class="item-name">${it.n}</div><div class="item-unit">${it.u}</div></div>
+<div class="item-par">${it.p}</div>
+<div><input class="item-input" type="number" inputmode="decimal" step="any" min="0" placeholder="?" data-c="${k}" data-i="${i}" data-p="${it.p}" oninput="calc(this)"></div>
+<div class="item-order empty" id="o-${k}-${i}">—</div>
+</div>
+<div class="item-note-toggle" onclick="toggleNote(this)">+ Add note</div>
+<div class="item-note-area"><input class="item-note-input" type="text" placeholder="Expired? Damaged? Client wants more/less?" data-c="${k}" data-i="${i}"></div>
+</div>`;
+i++}}
+h+='</div>';c.innerHTML+=h}
+updateSummary()}
+
+function switchTab(t,el){cur=t;
+document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+el.classList.add('active');
+document.querySelectorAll('.client-form').forEach(x=>x.classList.remove('active'));
+document.getElementById('f-'+t).classList.add('active');updateSummary()}
+
+function toggleNote(el){const a=el.nextElementSibling;a.classList.toggle('show');
+el.textContent=a.classList.contains('show')?'- Hide note':'+ Add note'}
+
+function calc(inp){
+const k=inp.dataset.c,i=inp.dataset.i,par=parseFloat(inp.dataset.p),v=inp.value===''?null:parseFloat(inp.value);
+const o=document.getElementById(`o-${k}-${i}`);
+if(v===null||isNaN(v)){o.className='item-order empty';o.textContent='—'}
+else{const ord=Math.max(par-v,0);
+if(ord>0){o.className='item-order needs';o.textContent=ord%1===0?ord:ord.toFixed(1)}
+else{o.className='item-order zero';o.textContent='OK'}}
+updateSummary()}
+
+function updateSummary(){
+const inps=document.querySelectorAll(`#f-${cur} .item-input`);
+let cnt=0,ord=0,low=0,tot=inps.length;
+inps.forEach(inp=>{if(inp.value!==''){cnt++;const p=parseFloat(inp.dataset.p),v=parseFloat(inp.value);
+if(Math.max(p-v,0)>0)ord++;if(v<=p*0.25)low++}});
+document.getElementById('s-count').textContent=cnt;
+document.getElementById('s-order').textContent=ord;
+document.getElementById('s-low').textContent=low;
+document.getElementById('s-total').textContent=tot}
+
+function buildSummary(){
+const cl=D[cur],dr=document.getElementById('driverName').value||'Driver',
+dt=new Date().toLocaleDateString('de-DE'),tm=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),
+gn=document.getElementById(`gn-${cur}`).value;
+let lines=[`BELLABONA STOCK COUNT`,`Client: ${cl.name}`,`Date: ${dt} ${tm}`,`Driver: ${dr}`,``];
+let orderLines=[],lowLines=[],noteLines=[],idx=0;
+for(const cat of cl.cats){let ci=[];
+for(const it of cat.items){
+const inp=document.querySelector(`input.item-input[data-c="${cur}"][data-i="${idx}"]`);
+const noteInp=document.querySelector(`input.item-note-input[data-c="${cur}"][data-i="${idx}"]`);
+const note=noteInp?noteInp.value:'';
+if(inp&&inp.value!==''){const s=parseFloat(inp.value),o=Math.max(it.p-s,0);
+if(o>0)ci.push({n:it.n,u:it.u,s,p:it.p,o});
+if(s<=it.p*0.25)lowLines.push(`  !! ${it.n}: only ${s} ${it.u} left`)}
+if(note)noteLines.push(`  ${it.n}: ${note}`);
+idx++}
+if(ci.length>0){orderLines.push(`\n--- ${cat.n} ---`);
+ci.forEach(i=>{const o=i.o%1===0?i.o:i.o.toFixed(1);orderLines.push(`  ${i.n}: ORDER ${o} ${i.u} (was ${i.s}, par ${i.p})`)})}}
+if(orderLines.length===0)lines.push('All items at par level!');
+else{lines.push('ITEMS TO ORDER:');lines.push(orderLines.join('\n'))}
+if(lowLines.length>0){lines.push('\nLOW STOCK ALERTS:');lines.push(lowLines.join('\n'))}
+if(noteLines.length>0){lines.push('\nDRIVER NOTES:');lines.push(noteLines.join('\n'))}
+if(gn)lines.push(`\nGENERAL FEEDBACK:\n${gn}`);
+lines.push('\n--\nBellaBona Stock Count App');return lines.join('\n')}
+
+function submitCount(){const txt=buildSummary();
+document.getElementById('mtitle').textContent=`${D[cur].name} — Order Summary`;
+document.getElementById('msub').textContent=`${new Date().toLocaleDateString('de-DE')} | Driver: ${document.getElementById('driverName').value||'Unknown'}`;
+document.getElementById('mcontent').textContent=txt;
+document.getElementById('modal').classList.add('show')}
+
+function shareWhatsApp(){const txt=encodeURIComponent(buildSummary());
+window.open(`https://wa.me/?text=${txt}`,'_blank')}
+
+function shareWA(){const txt=encodeURIComponent(document.getElementById('mcontent').textContent);
+window.open(`https://wa.me/?text=${txt}`,'_blank')}
+
+function copyText(){const t=document.getElementById('mcontent').textContent;
+navigator.clipboard.writeText(t).then(()=>{const b=document.querySelector('.copy-btn');b.textContent='Copied!';setTimeout(()=>b.textContent='Copy',2000)})
+.catch(()=>{const r=document.createRange();r.selectNode(document.getElementById('mcontent'));window.getSelection().removeAllRanges();window.getSelection().addRange(r);document.execCommand('copy');
+const b=document.querySelector('.copy-btn');b.textContent='Copied!';setTimeout(()=>b.textContent='Copy',2000)})}
+
+function closeModal(){document.getElementById('modal').classList.remove('show')}
+document.getElementById('modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+init();
+</script>
+</body>
+</html>
