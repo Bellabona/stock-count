@@ -100,8 +100,28 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .modal-btns .wa-btn{background:#25D366;color:white}
 .modal-btns .close-btn{background:var(--lg);color:var(--gr)}
 </style>
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0a0f0d 0%,#141e1a 100%);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
+.login-screen.hidden{display:none}
+.login-logo{font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:700;color:#4a9;letter-spacing:4px;text-transform:uppercase;margin-bottom:8px}
+.login-sub{color:rgba(255,255,255,0.5);font-size:14px;margin-bottom:40px}
+.pin-input{width:200px;border:2px solid rgba(255,255,255,0.2);border-radius:14px;padding:16px;font-size:28px;font-weight:800;text-align:center;background:rgba(255,255,255,0.05);color:white;outline:none;letter-spacing:8px;-webkit-text-security:disc}
+.pin-input:focus{border-color:#4a9;box-shadow:0 0 0 3px rgba(74,170,153,0.3)}
+.pin-input::placeholder{color:rgba(255,255,255,0.2);letter-spacing:4px;font-size:16px}
+.login-btn{width:200px;margin-top:16px;padding:14px;border:none;border-radius:14px;background:var(--g);color:white;font-size:16px;font-weight:700;cursor:pointer}
+.login-btn:active{transform:scale(0.97)}
+.login-error{color:var(--r);font-size:13px;margin-top:12px;min-height:20px}
+.login-user{color:rgba(255,255,255,0.3);font-size:12px;margin-top:24px}
+</style>
 </head>
 <body>
+<div class="login-screen" id="loginScreen">
+<div class="login-logo">BELLABONA</div>
+<div class="login-sub">Stock Count</div>
+<input class="pin-input" type="password" id="pinInput" inputmode="numeric" maxlength="4" placeholder="PIN" autofocus>
+<button class="login-btn" onclick="checkPin()">Enter</button>
+<div class="login-error" id="loginError"></div>
+<div class="login-user">Authorized personnel only</div>
+</div>
 <div class="header">
 <div class="header-row">
 <div class="logo">BELLABONA</div>
@@ -110,7 +130,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div class="header-title">Stock Count</div>
 <div class="header-date" id="today"></div>
 </div>
-<button class="admin-btn" id="adminBtn" onclick="toggleAdmin()">Admin</button>
+<button class="admin-btn" id="adminBtn" onclick="toggleAdmin()" style="display:none">Admin</button>
 </div>
 </div>
 </div>
@@ -167,9 +187,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 </div>
 <script>
-const ADMIN_PASS='bb2026';
+const ADMIN_PIN='1510';
+const PINS={'1122':'Martin','2211':'Tasnim','2233':'Kartik','3322':'Piyush','3344':'Harsh','4455':'Ali Daher','5555':'Jossue','1510':'Abbas'};
 let isAdmin=false;
+let currentUser='';
 let customItems={revolut:[],paypal:[],ufa:[]};
+function checkPin(){const pin=document.getElementById('pinInput').value;
+if(PINS[pin]){currentUser=PINS[pin];document.getElementById('loginScreen').classList.add('hidden');
+document.getElementById('driverName').value=currentUser;document.getElementById('loginError').textContent='';
+if(pin===ADMIN_PIN){document.getElementById('adminBtn').style.display='inline-block';setTimeout(()=>toggleAdmin(),100)}else{document.getElementById('adminBtn').style.display='none'}}
+else{document.getElementById('loginError').textContent='Wrong PIN. Try again.';document.getElementById('pinInput').value=''}}
+document.getElementById('pinInput').addEventListener('keydown',e=>{if(e.key==='Enter')checkPin()});
 const D={
 revolut:{name:'Revolut',cats:[
 {n:'Drinks',items:[{n:'True Fruits 250ml',u:'bottle',p:14},{n:'ChariTea Black',u:'bottle',p:8},{n:'ChariTea Mate',u:'bottle',p:6},{n:'ChariTea Red',u:'bottle',p:4},{n:'Kombucha Raspberry',u:'bottle',p:6},{n:'Kombucha Hibiskus',u:'bottle',p:6},{n:'Coca Cola/Zero',u:'bottle',p:6},{n:'Fanta Orange',u:'bottle',p:6},{n:'Rauch Juice',u:'bottle',p:6},{n:'Kombucha Early Bird',u:'bottle',p:4}]},
@@ -197,11 +225,10 @@ function toggleAdmin(){
 if(isAdmin){isAdmin=false;document.getElementById('adminBtn').classList.remove('active');document.getElementById('adminBtn').textContent='Admin';
 document.getElementById('adminBanner').classList.remove('show');
 document.querySelectorAll('.item-par').forEach(el=>{el.classList.remove('editable');el.onclick=null});return}
-const pass=prompt('Enter admin password:');
-if(pass===ADMIN_PASS){isAdmin=true;document.getElementById('adminBtn').classList.add('active');document.getElementById('adminBtn').textContent='Abbas';
+isAdmin=true;document.getElementById('adminBtn').classList.add('active');document.getElementById('adminBtn').textContent='Abbas';
 document.getElementById('adminBanner').classList.add('show');
 document.getElementById('adminUser').textContent='ADMIN MODE — Tap any par level to edit';
-enableParEditing()}else if(pass!==null){alert('Wrong password')}}
+enableParEditing()}
 function enableParEditing(){
 document.querySelectorAll('.item-par').forEach(el=>{el.classList.add('editable');
 el.onclick=function(){const cv=this.textContent;const inp=document.createElement('input');inp.type='number';inp.className='par-edit';inp.value=cv;inp.inputMode='decimal';inp.step='any';
