@@ -265,11 +265,30 @@ function switchTab(t,el){cur=t;document.querySelectorAll('.tab').forEach(x=>x.cl
 function toggleNote(el){const a=el.nextElementSibling;a.classList.toggle('show');el.textContent=a.classList.contains('show')?'- Hide note':'+ Add note'}
 function calc(inp){const k=inp.dataset.c,i=inp.dataset.i,par=parseFloat(inp.dataset.p),v=inp.value===''?null:parseFloat(inp.value);const o=document.getElementById(`o-${k}-${i}`);if(v===null||isNaN(v)){o.className='item-order empty';o.textContent='—'}else{const ord=Math.max(par-v,0);if(ord>0){o.className='item-order needs';o.textContent=ord%1===0?ord:ord.toFixed(1)}else if(v>par*1.5){o.className='item-order over';o.textContent='OVER!'}else if(v>par){o.className='item-order over';o.textContent='SKIP'}else{o.className='item-order zero';o.textContent='OK'}}updateSummary()}
 function updateSummary(){const inps=document.querySelectorAll(`#f-${cur} .item-input`);let cnt=0,ord=0,low=0,tot=inps.length;inps.forEach(inp=>{if(inp.value!==''){cnt++;const p=parseFloat(inp.dataset.p),v=parseFloat(inp.value);if(Math.max(p-v,0)>0)ord++;if(v<=p*0.25)low++}});document.getElementById('s-count').textContent=cnt;document.getElementById('s-order').textContent=ord;document.getElementById('s-low').textContent=low;document.getElementById('s-total').textContent=tot}
-function buildSummary(){const cl=D[cur],dr=document.getElementById('driverName').value||'Driver',dt=new Date().toLocaleDateString('de-DE'),tm=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),gn=document.getElementById(`gn-${cur}`).value,req=document.getElementById(`req-${cur}`).value;let lines=[`BELLABONA STOCK COUNT`,`Client: ${cl.name}`,`Date: ${dt} ${tm}`,`Driver: ${dr}`,``];let orderLines=[],lowLines=[],noteLines=[],idx=0;
-for(const cat of cl.cats){let ci=[];for(const it of cat.items){const inp=document.querySelector(`input.item-input[data-c="${cur}"][data-i="${idx}"]`);const noteInp=document.querySelector(`input.item-note-input[data-c="${cur}"][data-i="${idx}"]`);const note=noteInp?noteInp.value:'';if(inp&&inp.value!==''){const s=parseFloat(inp.value),o=Math.max(it.p-s,0);if(o>0)ci.push({n:it.n,u:it.u,s,p:it.p,o});if(s<=it.p*0.25)lowLines.push(`  !! ${it.n}: only ${s} ${it.u} left`)}if(note)noteLines.push(`  ${it.n}: ${note}`);idx++}if(ci.length>0){orderLines.push(`\n--- ${cat.n} ---`);ci.forEach(i=>{const o=i.o%1===0?i.o:i.o.toFixed(1);orderLines.push(`  ${i.n}: ORDER ${o} ${i.u} (was ${i.s}, par ${i.p})`)})}}
+function buildSummary(){const cl=D[cur],dr=document.getElementById('driverName').value||'Driver',dt=new Date().toLocaleDateString('de-DE'),tm=new Date().toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'}),gn=document.getElementById(`gn-${cur}`).value,req=document.getElementById(`req-${cur}`).value;
+let lines=[`BELLABONA STOCK COUNT`,`========================`,`Client: ${cl.name}`,`Date: ${dt} ${tm}`,`Driver: ${dr}`,``];
+let orderItems=[],skipItems=[],overItems=[],okItems=[],noteLines=[],idx=0;
+for(const cat of cl.cats){for(const it of cat.items){
+const inp=document.querySelector(`input.item-input[data-c="${cur}"][data-i="${idx}"]`);
+const noteInp=document.querySelector(`input.item-note-input[data-c="${cur}"][data-i="${idx}"]`);
+const note=noteInp?noteInp.value:'';
+if(inp&&inp.value!==''){const s=parseFloat(inp.value),o=Math.max(it.p-s,0);
+if(o>0){orderItems.push({n:it.n,u:it.u,s,p:it.p,o,cat:cat.n})}
+else if(s>it.p*1.5){overItems.push({n:it.n,u:it.u,s,p:it.p,cat:cat.n})}
+else if(s>it.p){skipItems.push({n:it.n,u:it.u,s,p:it.p,cat:cat.n})}
+else{okItems.push({n:it.n,u:it.u,s,p:it.p,cat:cat.n})}}
+if(note)noteLines.push(`  ${it.n}: ${note}`);idx++}}
 if(customItems[cur].length>0){lines.push('CUSTOM ITEMS FOUND ON-SITE:');customItems[cur].forEach(ci=>{lines.push(`  ${ci.n}: ${ci.q||'?'} ${ci.u}`)});lines.push('')}
-if(orderLines.length===0)lines.push('All items at par level!');else{lines.push('ITEMS TO ORDER:');lines.push(orderLines.join('\n'))}
-if(lowLines.length>0){lines.push('\nLOW STOCK ALERTS:');lines.push(lowLines.join('\n'))}if(noteLines.length>0){lines.push('\nDRIVER NOTES:');lines.push(noteLines.join('\n'))}if(req){lines.push('\nCUSTOMER REQUESTS:');lines.push(req)}if(gn)lines.push(`\nGENERAL NOTES:\n${gn}`);lines.push('\n--\nBellaBona Stock Count App');return lines.join('\n')}
+if(orderItems.length>0){lines.push(`NEED TO ORDER (${orderItems.length} items):`);orderItems.forEach(i=>{const o=i.o%1===0?i.o:i.o.toFixed(1);lines.push(`  ${i.n}: ORDER ${o} ${i.u}  (stock: ${i.s}, par: ${i.p})`)});lines.push('')}
+if(overItems.length>0){lines.push(`OVER-STOCKED - DO NOT SEND (${overItems.length} items):`);overItems.forEach(i=>{lines.push(`  ${i.n}: ${i.s} ${i.u} on shelf (par only ${i.p}) - TOO MUCH`)});lines.push('')}
+if(skipItems.length>0){lines.push(`SKIP THIS WEEK (${skipItems.length} items):`);skipItems.forEach(i=>{lines.push(`  ${i.n}: ${i.s} ${i.u} on shelf (par ${i.p}) - enough`)});lines.push('')}
+if(okItems.length>0){lines.push(`AT PAR LEVEL - OK (${okItems.length} items):`);okItems.forEach(i=>{lines.push(`  ${i.n}: ${i.s} ${i.u} (par ${i.p}) - good`)});lines.push('')}
+const total=orderItems.length+skipItems.length+overItems.length+okItems.length;
+lines.push(`SUMMARY: ${total} items counted | ${orderItems.length} to order | ${skipItems.length} skip | ${overItems.length} over-stocked | ${okItems.length} OK`);
+if(noteLines.length>0){lines.push('\nDRIVER NOTES:');lines.push(noteLines.join('\n'))}
+if(req){lines.push('\nCUSTOMER REQUESTS:');lines.push(req)}
+if(gn)lines.push(`\nGENERAL NOTES:\n${gn}`);
+lines.push('\n--\nBellaBona Stock Count App');return lines.join('\n')}
 function submitCount(){const txt=buildSummary();document.getElementById('mtitle').textContent=`${D[cur].name} — Order Summary`;document.getElementById('msub').textContent=`${new Date().toLocaleDateString('de-DE')} | Driver: ${document.getElementById('driverName').value||'Unknown'}`;document.getElementById('mcontent').textContent=txt;document.getElementById('modal').classList.add('show')}
 function shareWhatsApp(){const txt=encodeURIComponent(buildSummary());window.open(`https://wa.me/?text=${txt}`,'_blank')}
 function shareWA(){const txt=encodeURIComponent(document.getElementById('mcontent').textContent);window.open(`https://wa.me/?text=${txt}`,'_blank')}
