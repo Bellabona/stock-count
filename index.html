@@ -127,11 +127,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div id="forms"></div>
 <div class="modal-bg" id="addModal">
 <div class="add-modal">
-<h3>Add Custom Item</h3>
+<h3 id="addModalTitle">Add Custom Item</h3>
 <input type="text" id="addName" placeholder="Item name (e.g. Almond Butter)">
 <div class="add-row">
 <input type="text" id="addUnit" placeholder="Unit (e.g. jar, pack, kg)">
-<input type="number" id="addQty" inputmode="decimal" placeholder="Qty found">
+<input type="number" id="addQty" inputmode="decimal" placeholder="Qty found" id="addQtyLabel">
+</div>
+<div id="addParRow" style="display:none;margin-bottom:10px">
+<input type="number" id="addPar" inputmode="decimal" placeholder="Par level (e.g. 6)" style="width:100%;border:2px solid var(--o);border-radius:10px;padding:12px;font-size:15px;outline:none">
 </div>
 <div class="modal-btns" style="margin-top:4px">
 <button class="copy-btn" onclick="addCustomItem()">Add Item</button>
@@ -207,22 +210,51 @@ const save=()=>{const nv=parseFloat(inp.value);if(!isNaN(nv)&&nv>=0){pe.textCont
 const c=pe.closest('.item-card')?.querySelector('.item-input');if(c){c.dataset.p=nv;calc(c)}
 const ck=c?.dataset.c,ci=c?.dataset.i;if(ck&&ci!==undefined){let idx=0;for(const cl of D[ck].cats){for(const it of cl.items){if(idx==ci){it.p=nv;savePars();break}idx++}}}}else{pe.textContent=cv}};
 inp.onblur=save;inp.onkeydown=function(e){if(e.key==='Enter'){save();e.preventDefault()}}}})}
+function openAddModal(){
+if(isAdmin){document.getElementById('addModalTitle').textContent='Add New Product to Catalog';
+document.getElementById('addQty').placeholder='Par level (target stock)';
+document.getElementById('addParRow').style.display='none';
+document.getElementById('addQty').style.border='2px solid var(--o)'}
+else{document.getElementById('addModalTitle').textContent='Add Custom Item (not in list)';
+document.getElementById('addQty').placeholder='Qty found on shelf';
+document.getElementById('addQty').style.border=''}
+openAddModal()}
 function addCustomItem(){
 const name=document.getElementById('addName').value.trim();
 const unit=document.getElementById('addUnit').value.trim()||'pcs';
 const qty=document.getElementById('addQty').value;
 if(!name){alert('Please enter an item name');return}
+if(isAdmin){
+const par=parseFloat(qty)||1;
+const lastCat=D[cur].cats[D[cur].cats.length-1];
+const newIdx=document.querySelectorAll(`#f-${cur} .item-input`).length;
+lastCat.items.push({n:name,u:unit,p:par});
+savePars();
+const container=document.getElementById(`custom-${cur}`);
+const html=`<div class="item-card" style="border-left:4px solid var(--g)"><div class="item-row">
+<div><div class="item-name">${name}</div><div class="item-unit">${unit}</div></div>
+<div class="item-par${isAdmin?' editable':''}">${par}</div>
+<div><input class="item-input" type="number" inputmode="decimal" step="any" min="0" placeholder="?" data-c="${cur}" data-i="${newIdx}" data-p="${par}" oninput="calc(this)"></div>
+<div class="item-order empty" id="o-${cur}-${newIdx}">—</div>
+</div>
+<div class="item-note-toggle" onclick="toggleNote(this)">+ Add note</div>
+<div class="item-note-area"><input class="item-note-input" type="text" placeholder="Notes..." data-c="${cur}" data-i="${newIdx}"></div>
+</div>`;
+container.insertAdjacentHTML('beforeend',html);
+if(isAdmin)enableParEditing();
+alert(`"${name}" added to ${D[cur].name} catalog with par level ${par}`)}
+else{
 customItems[cur].push({n:name,u:unit,q:qty});
 const container=document.getElementById(`custom-${cur}`);
 const html=`<div class="item-card custom"><div class="item-row">
-<div><div class="item-name">${name}</div><div class="item-unit">${unit} (custom)</div></div>
+<div><div class="item-name">${name}</div><div class="item-unit">${unit} (found on-site)</div></div>
 <div class="item-par">-</div>
 <div style="text-align:center;font-size:18px;font-weight:700;color:var(--o)">${qty||'?'}</div>
 <div style="text-align:center;font-size:12px;color:var(--o);font-weight:600">NEW</div>
 </div></div>`;
-container.insertAdjacentHTML('beforeend',html);
+container.insertAdjacentHTML('beforeend',html)}
 document.getElementById('addName').value='';document.getElementById('addUnit').value='';document.getElementById('addQty').value='';
-document.getElementById('addModal').classList.remove('show')}
+document.getElementById('addModal').classList.remove('show');updateSummary()}
 function init(){
 loadPars();
 document.getElementById('today').textContent=new Date().toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'2-digit',year:'numeric'});
@@ -247,7 +279,7 @@ h+=`<div class="item-card"><div class="item-row">
 </div>`;
 i++}}
 h+=`<div id="custom-${k}"></div>`;
-h+=`<button class="add-item-btn" onclick="document.getElementById('addModal').classList.add('show')">+ Add Item Not In List</button>`;
+h+=`<button class="add-item-btn" onclick="openAddModal()">+ Add Item Not In List</button>`;
 h+='</div>';c.innerHTML+=h}
 updateSummary()}
 function switchTab(t,el){cur=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));el.classList.add('active');document.querySelectorAll('.client-form').forEach(x=>x.classList.remove('active'));document.getElementById('f-'+t).classList.add('active');updateSummary()}
