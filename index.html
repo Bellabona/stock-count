@@ -101,7 +101,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 .modal-btns .close-btn{background:var(--lg);color:var(--gr)}
 </style>
 .login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#0a0f0d 0%,#141e1a 100%);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px}
-.login-screen.hidden{display:none}
 .login-logo{font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:700;color:#4a9;letter-spacing:4px;text-transform:uppercase;margin-bottom:8px}
 .login-sub{color:rgba(255,255,255,0.5);font-size:14px;margin-bottom:40px}
 .pin-input{width:200px;border:2px solid rgba(255,255,255,0.2);border-radius:14px;padding:16px;font-size:28px;font-weight:800;text-align:center;background:rgba(255,255,255,0.05);color:white;outline:none;letter-spacing:8px;-webkit-text-security:disc}
@@ -122,6 +121,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 <div class="login-error" id="loginError"></div>
 <div class="login-user">Authorized personnel only</div>
 </div>
+<div id="appContent" style="display:none">
 <div class="header">
 <div class="header-row">
 <div class="logo">BELLABONA</div>
@@ -186,6 +186,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 </div>
 </div>
+</div>
 <script>
 const ADMIN_PIN='1510';
 const PINS={'1122':'Martin','2211':'Tasnim','2233':'Kartik','3322':'Piyush','3344':'Harsh','4455':'Ali Daher','5555':'Jossue','1510':'Abbas'};
@@ -193,7 +194,9 @@ let isAdmin=false;
 let currentUser='';
 let customItems={revolut:[],paypal:[],ufa:[]};
 function checkPin(){const pin=document.getElementById('pinInput').value;
-if(PINS[pin]){currentUser=PINS[pin];document.getElementById('loginScreen').classList.add('hidden');
+if(PINS[pin]){currentUser=PINS[pin];
+document.getElementById('loginScreen').style.display='none';
+document.getElementById('appContent').style.display='block';
 document.getElementById('driverName').value=currentUser;document.getElementById('loginError').textContent='';
 if(pin===ADMIN_PIN){document.getElementById('adminBtn').style.display='inline-block';setTimeout(()=>toggleAdmin(),100)}else{document.getElementById('adminBtn').style.display='none'}}
 else{document.getElementById('loginError').textContent='Wrong PIN. Try again.';document.getElementById('pinInput').value=''}}
