@@ -8,8 +8,6 @@
 <meta name="apple-mobile-web-app-title" content="BB Stock">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🥗</text></svg>">
 <title>BellaBona Stock Count</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-app-compat.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/firebase/10.12.2/firebase-auth-compat.min.js"></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--g:#2D6A4F;--l:#95D5B2;--d:#1B4332;--lt:#D8F3DC;--r:#E63946;--o:#E76F51;--bl:#264653;--gr:#6B7280;--lg:#F3F4F6;--y:#FDE68A;--w:#FFF}
@@ -166,11 +164,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 </div>
 </div>
 <script>
-firebase.initializeApp({apiKey:"AIzaSyAAli1-_46ehgM7hzaLLNybkP4MIUw0XZQ",authDomain:"stock-count-d0abf.firebaseapp.com",projectId:"stock-count-d0abf",storageBucket:"stock-count-d0abf.firebasestorage.app",messagingSenderId:"1038826498876",appId:"1:1038826498876:web:fb1f017d91d5ac1188cc39"});
-const auth=firebase.auth();
+const ADMIN_PASS='bb2026';
 let isAdmin=false;
 let customItems={revolut:[],paypal:[],ufa:[]};
-const ADMIN_EMAILS=['abbas@bellabona.com'];
 const D={
 revolut:{name:'Revolut',cats:[
 {n:'Drinks',items:[{n:'True Fruits 250ml',u:'bottle',p:14},{n:'ChariTea Black',u:'bottle',p:8},{n:'ChariTea Mate',u:'bottle',p:6},{n:'ChariTea Red',u:'bottle',p:4},{n:'Kombucha Raspberry',u:'bottle',p:6},{n:'Kombucha Hibiskus',u:'bottle',p:6},{n:'Coca Cola/Zero',u:'bottle',p:6},{n:'Fanta Orange',u:'bottle',p:6},{n:'Rauch Juice',u:'bottle',p:6},{n:'Kombucha Early Bird',u:'bottle',p:4}]},
@@ -195,21 +191,14 @@ function loadPars(){try{const s=localStorage.getItem('bb_pars');if(s){const save
 function savePars(){const o={};for(const[k,cl]of Object.entries(D)){o[k]={};cl.cats.forEach((cat,ci)=>{o[k][ci]={};cat.items.forEach((it,ii)=>{o[k][ci][ii]=it.p})})}localStorage.setItem('bb_pars',JSON.stringify(o))}
 let cur='revolut';
 function toggleAdmin(){
-if(isAdmin){signOutAdmin();return}
-const provider=new firebase.auth.GoogleAuthProvider();
-auth.signInWithPopup(provider).catch(e=>alert('Sign-in failed: '+e.message))}
-function signOutAdmin(){auth.signOut();isAdmin=false;document.getElementById('adminBtn').classList.remove('active');
+if(isAdmin){isAdmin=false;document.getElementById('adminBtn').classList.remove('active');document.getElementById('adminBtn').textContent='Admin';
 document.getElementById('adminBanner').classList.remove('show');
-document.querySelectorAll('.item-par').forEach(el=>{el.classList.remove('editable');el.onclick=null})}
-auth.onAuthStateChanged(user=>{
-if(user&&ADMIN_EMAILS.includes(user.email)){
-isAdmin=true;document.getElementById('adminBtn').classList.add('active');document.getElementById('adminBtn').textContent=user.displayName?.split(' ')[0]||'Admin';
+document.querySelectorAll('.item-par').forEach(el=>{el.classList.remove('editable');el.onclick=null});return}
+const pass=prompt('Enter admin password:');
+if(pass===ADMIN_PASS){isAdmin=true;document.getElementById('adminBtn').classList.add('active');document.getElementById('adminBtn').textContent='Abbas';
 document.getElementById('adminBanner').classList.add('show');
-document.getElementById('adminUser').textContent=`ADMIN: ${user.displayName||user.email} — Tap par levels to edit`;
-enableParEditing()}
-else if(user){auth.signOut();alert('Access denied. Only admin emails can edit.')}
-else{isAdmin=false;document.getElementById('adminBtn').classList.remove('active');document.getElementById('adminBtn').textContent='Admin';
-document.getElementById('adminBanner').classList.remove('show')}});
+document.getElementById('adminUser').textContent='ADMIN MODE — Tap any par level to edit';
+enableParEditing()}else if(pass!==null){alert('Wrong password')}}
 function enableParEditing(){
 document.querySelectorAll('.item-par').forEach(el=>{el.classList.add('editable');
 el.onclick=function(){const cv=this.textContent;const inp=document.createElement('input');inp.type='number';inp.className='par-edit';inp.value=cv;inp.inputMode='decimal';inp.step='any';
