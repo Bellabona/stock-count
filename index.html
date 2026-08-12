@@ -110,21 +110,25 @@ input,textarea{font-family:inherit}
 .cat-label::after{content:"";flex:1;height:1px;background:var(--lime-line)}
 
 /* product row */
-.prow{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:14px;padding:11px 12px 11px 14px;margin-bottom:9px;box-shadow:var(--shadow);border-left:4px solid transparent;transition:.12s}
-.prow.counted{border-left-color:var(--green);background:linear-gradient(90deg,var(--lime-2),#fff 60%)}
-.pinfo{flex:1;min-width:0}
+.prow{display:flex;flex-direction:column;background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:9px;box-shadow:var(--shadow);border-left:4px solid transparent;transition:.12s}
+.prow.counted{border-left-color:var(--green);background:var(--lime-2)}
+.pinfo{min-width:0;display:flex;flex-direction:column}
 .pname{font-size:15px;font-weight:600;line-height:1.2}
 .pmeta{font-size:11.5px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .pref{background:#eef3ea;border-radius:5px;padding:1px 6px;font-weight:600;letter-spacing:.02em;font-size:10.5px}
 .checkmini{color:var(--ok);font-weight:700;display:none;align-items:center;gap:3px}
 .prow.counted .checkmini{display:inline-flex}
-.stepper{display:flex;align-items:center;gap:0;flex-shrink:0;background:#f1f5ee;border-radius:12px;padding:3px}
-.stepbtn{width:40px;height:44px;border-radius:9px;font-size:24px;font-weight:600;color:var(--green);display:flex;align-items:center;justify-content:center;transition:.1s}
-.stepbtn:active{background:var(--green);color:#fff;transform:scale(.94)}
-.qty{width:52px;height:44px;border:0;background:none;text-align:center;font-size:18px;font-weight:700;color:var(--ink);-moz-appearance:textfield}
+.ctrlbar{display:flex;gap:8px;margin-top:12px;align-items:stretch}
+.cbtn{width:46px;height:46px;border-radius:11px;background:#eef3ea;color:var(--green);font-size:25px;font-weight:600;display:flex;align-items:center;justify-content:center;border:1px solid #e2ebdd;flex-shrink:0}
+.cbtn:active{background:var(--green);color:#fff;transform:scale(.95)}
+.qty{flex:1;min-width:0;height:46px;border:2px solid #e2ebdd;border-radius:11px;background:#fff;text-align:center;font-size:19px;font-weight:700;color:var(--ink);-moz-appearance:textfield}
 .qty::-webkit-outer-spin-button,.qty::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.qty:focus{outline:none}
-.prow.counted .qty{color:var(--green)}
+.qty:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(2,73,48,.08)}
+.qadd{min-width:54px;height:46px;border-radius:11px;background:var(--lime);color:var(--green-deep);font-size:15px;font-weight:800;border:1px solid #d4ec9f;flex-shrink:0}
+.qadd:active{background:var(--green);color:#fff;transform:scale(.95)}
+.qty.flash{animation:qflash .3s ease}
+@keyframes qflash{0%{transform:scale(1)}45%{transform:scale(1.09);background:var(--lime);border-color:var(--green)}100%{transform:scale(1)}}
+.prow.counted .qty{border-color:var(--green);color:var(--green);background:#fff}
 .emptylist{text-align:center;color:var(--muted);padding:50px 20px;font-size:14px}
 .emptylist svg{width:40px;height:40px;opacity:.35;margin-bottom:10px}
 
@@ -899,10 +903,12 @@ function prowHTML(p){
       <div class="pname">${esc(p.name)}</div>
       <div class="pmeta"><span class="pref">${p.ref}</span><span>${esc(p.unit)}</span><span class="checkmini"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg>counted</span></div>
     </div>
-    <div class="stepper">
-      <button class="stepbtn" onclick="dec('${p.ref}')">−</button>
+    <div class="ctrlbar">
+      <button class="cbtn" onclick="dec('${p.ref}')" aria-label="minus one">−</button>
       <input class="qty" id="qty-${p.ref}" inputmode="decimal" value="${val}" placeholder="0" onfocus="this.select()" oninput="onQty('${p.ref}',this.value)">
-      <button class="stepbtn" onclick="inc('${p.ref}')">+</button>
+      <button class="cbtn" onclick="inc('${p.ref}')" aria-label="plus one">+</button>
+      <button class="qadd" onclick="addQty('${p.ref}',5)">+5</button>
+      <button class="qadd" onclick="addQty('${p.ref}',10)">+10</button>
     </div>
   </div>`;
 }
@@ -921,6 +927,8 @@ function reflectRow(ref){
 }
 function inc(ref){const c=S.counts[ref];let v=c?num(c.qty):0;v=Math.round((v+1)*100)/100;setCount(ref,v);const inp=document.getElementById('qty-'+ref);if(inp)inp.value=v;}
 function dec(ref){const c=S.counts[ref];if(!c)return;/* ignore − on an untouched item */let v=Math.max(0,Math.round((num(c.qty)-1)*100)/100);setCount(ref,v);const inp=document.getElementById('qty-'+ref);if(inp)inp.value=v;}
+function addQty(ref,amt){const c=S.counts[ref];let v=(c?num(c.qty):0)+amt;v=Math.round(v*100)/100;if(v<0)v=0;setCount(ref,v);const inp=document.getElementById('qty-'+ref);if(inp)inp.value=v;pulse(ref);}
+function pulse(ref){const inp=document.getElementById('qty-'+ref);if(!inp)return;inp.classList.remove('flash');void inp.offsetWidth;inp.classList.add('flash');}
 function onQty(ref,raw){
   let v=raw.replace(',','.').replace(/[^0-9.]/g,'');
   if(v===''){setCountSilent(ref,'');return;}
